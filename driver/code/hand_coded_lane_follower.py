@@ -35,6 +35,7 @@ class HandCodedLaneFollower(object):
 
         if self.car is not None:
             self.car.front_wheels.turn(self.curr_steering_angle)
+            logging.info(f'steering angle {self.curr_steering_angle}')
         curr_heading_image = display_heading_line(frame, self.curr_steering_angle)
         show_image("heading", curr_heading_image)
 
@@ -233,7 +234,9 @@ def stabilize_steering_angle(curr_steering_angle, new_steering_angle, num_of_lan
                                         + max_angle_deviation * angle_deviation / abs(angle_deviation))
     else:
         stabilized_steering_angle = new_steering_angle
-    logging.info('Proposed angle: %s, stabilized angle: %s' % (new_steering_angle, stabilized_steering_angle))
+    logging.info(
+        f'[steering angle] current: {curr_steering_angle}, proposed: {new_steering_angle}, stabilized: {stabilized_steering_angle}'
+    )
     return stabilized_steering_angle
 
 
@@ -278,7 +281,6 @@ def length_of_line_segment(line):
     x1, y1, x2, y2 = line
     return math.sqrt((x2 - x1) ** 2 + (y2 - y1) ** 2)
 
-
 def show_image(title, frame, show=_SHOW_IMAGE):
     if show:
         cv2.imshow(title, frame)
@@ -296,54 +298,6 @@ def make_points(frame, line):
     return [[x1, y1, x2, y2]]
 
 
-############################
-# Test Functions
-############################
-def test_photo(file):
-    land_follower = HandCodedLaneFollower()
-    frame = cv2.imread(file)
-    combo_image = land_follower.follow_lane(frame)
-    show_image('final', combo_image, True)
-    cv2.waitKey(0)
-    cv2.destroyAllWindows()
 
 
-def test_video(video_file):
-    lane_follower = HandCodedLaneFollower()
-    cap = cv2.VideoCapture(video_file + '.avi')
 
-    # skip first second of video.
-    for i in range(3):
-        _, frame = cap.read()
-
-    video_type = cv2.VideoWriter_fourcc(*'XVID')
-    video_overlay = cv2.VideoWriter("%s_overlay.avi" % (video_file), video_type, 20.0, (320, 240))
-    try:
-        i = 0
-        while cap.isOpened():
-            _, frame = cap.read()
-            print('frame %s' % i )
-            combo_image= lane_follower.follow_lane(frame)
-            
-            cv2.imwrite("%s_%03d_%03d.png" % (video_file, i, lane_follower.curr_steering_angle), frame)
-            
-            cv2.imwrite("%s_overlay_%03d.png" % (video_file, i), combo_image)
-            video_overlay.write(combo_image)
-            cv2.imshow("Road with Lane line", combo_image)
-
-            i += 1
-            if cv2.waitKey(1) & 0xFF == ord('q'):
-                break
-    finally:
-        cap.release()
-        video_overlay.release()
-        cv2.destroyAllWindows()
-
-
-if __name__ == '__main__':
-    logging.basicConfig(level=logging.INFO)
-
-    test_video('/home/pi/DeepPiCar/driver/data/tmp/video01')
-    #test_photo('/home/pi/DeepPiCar/driver/data/video/car_video_190427_110320_073.png')
-    #test_photo(sys.argv[1])
-    #test_video(sys.argv[1])

@@ -117,12 +117,13 @@ class ObjectsOnRoadProcessor(object):
         self.speed = car_state['speed']
 
         if self.speed == 0:
-            self.set_speed(0)
+            logging.info('setting speed to 0')
+            self.set_speed(0)            
         else:
-            logging.debug('Current Speed = %d, New Speed = %d' %
-                          (old_speed, self.speed))
+            self.set_speed(self.speed_limit)
         logging.debug('Current Speed = %d, New Speed = %d' %
-                      (old_speed, self.speed))
+                          (old_speed, self.speed))        
+        logging.debug(f'car_state: {car_state}')
 
         if self.speed == 0:
             logging.debug('full stop for 1 seconds')
@@ -132,7 +133,7 @@ class ObjectsOnRoadProcessor(object):
         # Use this setter, so we can test this class without a car attached
         self.speed = speed
         if self.car is not None:
-            logging.debug("Actually setting car speed to %d" % speed)
+            logging.info("Actually setting car speed to %d" % speed)
             self.car.back_wheels.speed = speed
 
     ############################

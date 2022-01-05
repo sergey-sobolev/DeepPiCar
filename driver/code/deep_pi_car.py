@@ -5,7 +5,7 @@ import datetime
 from hand_coded_lane_follower import HandCodedLaneFollower
 from objects_on_road_processor import ObjectsOnRoadProcessor
 
-_SHOW_IMAGE = True
+_SHOW_IMAGE = False
 
 
 class DeepPiCar(object):
@@ -26,11 +26,11 @@ class DeepPiCar(object):
         self.camera.set(4, self.__SCREEN_HEIGHT)
 
         self.pan_servo = picar.Servo.Servo(1)
-        self.pan_servo.offset = -30  # calibrate servo to center
+        self.pan_servo.offset = 20  # calibrate servo to center
         self.pan_servo.write(90)
 
-        self.tilt_servo = picar.Servo.Servo(2)
-        self.tilt_servo.offset = 20  # calibrate servo to center
+        self.tilt_servo = picar.Servo.Servo(2, bus_number=1)
+        self.tilt_servo.offset = -10  # calibrate servo to center
         self.tilt_servo.write(90)
 
         logging.debug('Set up back wheels')
@@ -39,8 +39,14 @@ class DeepPiCar(object):
 
         logging.debug('Set up front wheels')
         self.front_wheels = picar.front_wheels.Front_Wheels()
-        self.front_wheels.turning_offset = -25  # calibrate servo to center
-        self.front_wheels.turn(90)  # Steering Range is 45 (left) - 90 (center) - 135 (right)
+        
+        # picar.Servo.PCA9685.PWM._DEBUG = True        
+        # self.front_wheels.debug = True
+        
+        self.front_wheels._straight_angle = 90
+        self.front_wheels.turning_max = 45
+        self.front_wheels.turning_offset = 25  # calibrate servo to center
+        self.front_wheels.turn_straight()  # Steering Range is 45 (left) - 90 (center) - 135 (right)
 
         self.lane_follower = HandCodedLaneFollower(self)
         self.traffic_sign_processor = ObjectsOnRoadProcessor(self)
@@ -73,7 +79,7 @@ class DeepPiCar(object):
         """ Reset the hardware"""
         logging.info('Stopping the car, resetting hardware.')
         self.back_wheels.speed = 0
-        self.front_wheels.turn(90)
+        self.front_wheels.turn_straight()
         self.camera.release()
         self.video_orig.release()
         self.video_lane.release()
@@ -127,7 +133,7 @@ def show_image(title, frame, show=_SHOW_IMAGE):
 
 def main():
     with DeepPiCar() as car:
-        car.drive(40)
+        car.drive(10)
 
 
 if __name__ == '__main__':
