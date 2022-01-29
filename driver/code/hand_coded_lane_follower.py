@@ -69,8 +69,8 @@ def detect_edges(frame):
     # filter for blue lane lines
     hsv = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
     show_image("hsv", hsv)
-    lower_blue = np.array([30, 40, 0])
-    upper_blue = np.array([150, 255, 255])
+    lower_blue = np.array([80, 40, 0])
+    upper_blue = np.array([160, 180, 180])
     mask = cv2.inRange(hsv, lower_blue, upper_blue)
     show_image("blue mask", mask)
 
@@ -109,8 +109,8 @@ def region_of_interest(canny):
     # only focus bottom half of the screen
 
     polygon = np.array([[
-        (0, height * 1 / 2),
-        (width, height * 1 / 2),
+        (0, height * 2 / 3),
+        (width, height * 2 / 3),
         (width, height),
         (0, height),
     ]], np.int32)
@@ -148,11 +148,11 @@ def average_slope_intercept(frame, line_segments):
         logging.info('No line_segment segments detected')
         return lane_lines
 
-    height, width, _ = frame.shape
+    _, width, _ = frame.shape
     left_fit = []
     right_fit = []
 
-    boundary = 1/3
+    boundary = 2/3
     left_region_boundary = width * (1 - boundary)  # left lane line segment should be on left 2/3 of the screen
     right_region_boundary = width * boundary # right lane line segment should be on left 2/3 of the screen
 
@@ -215,7 +215,7 @@ def compute_steering_angle(frame, lane_lines):
     return steering_angle
 
 
-def stabilize_steering_angle(curr_steering_angle, new_steering_angle, num_of_lane_lines, max_angle_deviation_two_lines=5, max_angle_deviation_one_lane=1):
+def stabilize_steering_angle(curr_steering_angle, new_steering_angle, num_of_lane_lines, max_angle_deviation_two_lines=3, max_angle_deviation_one_lane=1):
     """
     Using last steering angle to stabilize the steering angle
     This can be improved to use last N angles, etc

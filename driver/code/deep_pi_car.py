@@ -5,7 +5,7 @@ import datetime
 from hand_coded_lane_follower import HandCodedLaneFollower
 from objects_on_road_processor import ObjectsOnRoadProcessor
 
-_SHOW_IMAGE = True
+_SHOW_IMAGE = False
 
 
 class DeepPiCar(object):
@@ -13,7 +13,8 @@ class DeepPiCar(object):
     __INITIAL_SPEED = 0
     __SCREEN_WIDTH = 320
     __SCREEN_HEIGHT = 240
-    __CAMERA_ID = 2
+    __CAMERA_ID = -1
+    __RECORD_TRACK = True
 
     def __init__(self):
         """ Init camera and wheels"""
@@ -52,12 +53,12 @@ class DeepPiCar(object):
         self.lane_follower = HandCodedLaneFollower(self)
         self.traffic_sign_processor = ObjectsOnRoadProcessor(self)
         # lane_follower = DeepLearningLaneFollower()
-
-        self.fourcc = cv2.VideoWriter_fourcc(*'XVID')
-        datestr = datetime.datetime.now().strftime("%y%m%d_%H%M%S")
-        self.video_orig = self.create_video_recorder('../data/tmp/car_video%s.avi' % datestr)
-        self.video_lane = self.create_video_recorder('../data/tmp/car_video_lane%s.avi' % datestr)
-        self.video_objs = self.create_video_recorder('../data/tmp/car_video_objs%s.avi' % datestr)
+        if self.__RECORD_TRACK is True:
+            self.fourcc = cv2.VideoWriter_fourcc(*'XVID')
+            datestr = datetime.datetime.now().strftime("%y%m%d_%H%M%S")
+            self.video_orig = self.create_video_recorder('../data/tmp/car_video%s.avi' % datestr)
+            self.video_lane = self.create_video_recorder('../data/tmp/car_video_lane%s.avi' % datestr)
+            self.video_objs = self.create_video_recorder('../data/tmp/car_video_objs%s.avi' % datestr)
 
         logging.info('Created a DeepPiCar')
 
@@ -82,9 +83,10 @@ class DeepPiCar(object):
         self.back_wheels.speed = 0
         self.front_wheels.turn_straight()
         self.camera.release()
-        self.video_orig.release()
-        self.video_lane.release()
-        self.video_objs.release()
+        if self.__RECORD_TRACK:
+            self.video_orig.release()
+            self.video_lane.release()
+            self.video_objs.release()
         cv2.destroyAllWindows()
 
     def drive(self, speed=__INITIAL_SPEED):
@@ -102,14 +104,17 @@ class DeepPiCar(object):
             image_lane = cv2.rotate(frame, cv2.ROTATE_180)            
             image_objs = image_lane.copy()
             i += 1
-            self.video_orig.write(image_lane)
+            if self.__RECORD_TRACK is True:
+                self.video_orig.write(image_lane)
 
             image_objs = self.process_objects_on_road(image_objs)
-            self.video_objs.write(image_objs)
+            if self.__RECORD_TRACK is True:
+                self.video_objs.write(image_objs)
             show_image('Detected Objects', image_objs)
 
             image_lane = self.follow_lane(image_lane)
-            self.video_lane.write(image_lane)
+            if self.__RECORD_TRACK is True:
+                self.video_lane.write(image_lane)
             show_image('Lane Lines', image_lane)
 
             if cv2.waitKey(1) & 0xFF == ord('q'):
