@@ -5,7 +5,7 @@ import datetime
 from hand_coded_lane_follower import HandCodedLaneFollower
 from objects_on_road_processor import ObjectsOnRoadProcessor
 
-_SHOW_IMAGE = False
+_SHOW_IMAGE = True
 
 
 class DeepPiCar(object):
@@ -13,6 +13,7 @@ class DeepPiCar(object):
     __INITIAL_SPEED = 0
     __SCREEN_WIDTH = 320
     __SCREEN_HEIGHT = 240
+    __CAMERA_ID = 2
 
     def __init__(self):
         """ Init camera and wheels"""
@@ -21,7 +22,7 @@ class DeepPiCar(object):
         picar.setup()
 
         logging.debug('Set up camera')
-        self.camera = cv2.VideoCapture(0)
+        self.camera = cv2.VideoCapture(self.__CAMERA_ID)
         self.camera.set(3, self.__SCREEN_WIDTH)
         self.camera.set(4, self.__SCREEN_HEIGHT)
 
@@ -97,7 +98,8 @@ class DeepPiCar(object):
         self.back_wheels.speed = speed
         i = 0
         while self.camera.isOpened():
-            _, image_lane = self.camera.read()
+            _, frame = self.camera.read()
+            image_lane = cv2.rotate(frame, cv2.ROTATE_180)            
             image_objs = image_lane.copy()
             i += 1
             self.video_orig.write(image_lane)
